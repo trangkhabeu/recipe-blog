@@ -10,8 +10,9 @@ import React, { useEffect, useState } from "react";
 import { useNavigation, useRouter } from "expo-router";
 import { Colors } from "../../constants/Colors.ts";
 import Ionicons from "@expo/vector-icons/Ionicons";
-// import { auth } from "./../../../configs/FireBaseConfig";
-// import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth, database } from "../config/firebaseConfig"; // Updated import path
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { saveUserInfo } from "../utils/firebaseUserUtils";
 
 export default function SignUp() {
   const navigation = useNavigation();
@@ -33,20 +34,24 @@ export default function SignUp() {
       return;
     }
 
-    // createUserWithEmailAndPassword(auth, email, password)
-    //   .then((userCredential) => {
-    //     // Signed up
-    //     const user = userCredential.user;
-    //     console.log(user);
-    //     router.replace("/mytrip");
-    //     // ...
-    //   })
-    //   .catch((error) => {
-    //     const errorCode = error.code;
-    //     const errorMessage = error.message;
-    //     console.log(errorMessage, errorCode);
-    //     // ..
-    //   });
+    createUserWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        // Signed up
+        const user = userCredential.user;
+        console.log(user);
+
+        // Save user information to Firebase Realtime Database with an empty avatar field
+        saveUserInfo(user.uid, fullName, email, "");
+
+        router.replace("/login/signin");
+        // ...
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.log(errorMessage, errorCode);
+        // ..
+      });
   };
 
   return (
