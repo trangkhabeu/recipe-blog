@@ -5,7 +5,7 @@ import { getPosts, addPost } from "../firebase/posts";
 import * as ImagePicker from 'expo-image-picker';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import PostModal from '../../components/PostModal';
-import BlogPost from '../components/BlogPost'; 
+import BlogPost from '../../components/BlogPost'; 
 import { getAuth } from "firebase/auth"; // Correct import for auth
 
 export default function Blog() {
@@ -124,7 +124,7 @@ export default function Blog() {
         data={posts}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <BlogPost post={item} /> // Use BlogPost component to render each post
+          <BlogPost post={item} setPosts={setPosts} /> // Pass setPosts to BlogPost component
         )}
       />
     </View>

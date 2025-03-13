@@ -4,7 +4,7 @@ import {
   TextInput,
   StyleSheet,
   TouchableOpacity,
-  ToastAndroid,
+  Alert,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { useNavigation, useRouter } from "expo-router";
@@ -27,7 +27,7 @@ export default function SignIn() {
 
   const onSignIn = () => {
     if (!email || !password) {
-      ToastAndroid.show("Please enter email & password", ToastAndroid.LONG);
+      alert("Please enter email & password");
       return;
     }
 
@@ -44,19 +44,15 @@ export default function SignIn() {
         const errorMessage = error.message;
         console.log(errorMessage, error.code);
         if (errorCode == "auth/invalid-email") {
-          ToastAndroid.show("Email không hợp lệ", ToastAndroid.LONG);
+          alert("Invalid email");
         } else if (errorCode == "auth/wrong-password") {
-          ToastAndroid.show("Mật khẩu không hợp lệ", ToastAndroid.LONG);
+          alert("Invalid password");
         } else if (errorCode == "auth/user-not-found") {
-          ToastAndroid.show(
-            "Không tìm thấy người dùng. Vui lòng kiểm tra email của bạn.",
-            ToastAndroid.LONG
-          );
+          alert("User not found. Please check your email.");
         } else if (errorCode == "auth/invalid-credential") {
-          ToastAndroid.show(
-            "Thông tin đăng nhập không hợp lệ",
-            ToastAndroid.LONG
-          );
+          alert("Invalid credentials");
+        } else {
+          alert("Login failed. Please try again.");
         }
       });
   };
@@ -146,7 +142,7 @@ export default function SignIn() {
 
       {/* create acc button */}
       <TouchableOpacity
-        onPress={() => router.replace("/login/singup")}
+        onPress={() => router.replace("/login/signup")}
         style={{
           padding: 20,
           backgroundColor: Colors.WHITE,

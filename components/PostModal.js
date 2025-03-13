@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TextInput, Button, Image, TouchableOpacity, Modal, StyleSheet, Alert } from "react-native";
-import Icon from 'react-native-vector-icons/FontAwesome';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const PostModal = ({ modalVisible, setModalVisible, newPost, setNewPost, handleAddPost, pickImage, takePhoto }) => {
   const handlePost = async () => {
@@ -8,10 +8,14 @@ const PostModal = ({ modalVisible, setModalVisible, newPost, setNewPost, handleA
     Alert.alert('Success', 'Post created successfully');
   };
 
+  const handleCancelImage = () => {
+    setNewPost({ ...newPost, image: null });
+  };
+
   return (
     <Modal
       animationType="slide"
-      transparent={false}
+      transparent={true}
       visible={modalVisible}
       onRequestClose={() => setModalVisible(false)}
     >
@@ -19,9 +23,11 @@ const PostModal = ({ modalVisible, setModalVisible, newPost, setNewPost, handleA
         <View style={styles.modalContent}>
           <View style={styles.header}>
             <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.backButton}>
-              <Icon name="arrow-left" size={30} color="#000" />
+              <Icon name="arrow-back" size={20} color="#000" />
             </TouchableOpacity>
-            <Button title="Post" onPress={handlePost} style={styles.postButton} />
+            <TouchableOpacity onPress={handlePost} style={styles.postButton}>
+              <Text style={styles.postButtonText}>Post</Text>
+            </TouchableOpacity>
           </View>
           <TextInput
             placeholder="What's on your mind?"
@@ -30,16 +36,21 @@ const PostModal = ({ modalVisible, setModalVisible, newPost, setNewPost, handleA
             style={styles.textInput}
           />
           {newPost.image ? (
-            <Image source={{ uri: newPost.image }} style={styles.image} />
+            <View style={styles.imageContainer}>
+              <Image source={{ uri: newPost.image }} style={styles.image} />
+              <TouchableOpacity onPress={handleCancelImage} style={styles.cancelButton}>
+                <Icon name="cancel" size={24} color="#fff" />
+              </TouchableOpacity>
+            </View>
           ) : null}
           <View style={styles.iconContainer}>
             <TouchableOpacity onPress={takePhoto} style={styles.iconButton}>
-              <Icon name="camera" size={24} color="#000" />
-              <Text>Take Photo</Text>
+              <Icon name="camera-alt" size={24} color="#687076" />
+              <Text style={styles.iconText}>Take Photo</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={pickImage} style={styles.iconButton}>
-              <Icon name="upload" size={30} color="#000" />
-              <Text>Upload Image/Video</Text>
+              <Icon name="file-upload" size={24} color="#687076" />
+              <Text style={styles.iconText}>Upload Image/Video</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -51,15 +62,17 @@ const PostModal = ({ modalVisible, setModalVisible, newPost, setNewPost, handleA
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'white',
-    padding: 16,
-    marginTop: 50,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    width: '100%',
+    width: '90%',
+    height: '60%',
     padding: 20,
     backgroundColor: 'white',
+    borderRadius: 10,
+    justifyContent: 'space-between',
   },
   header: {
     flexDirection: 'row',
@@ -71,27 +84,47 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   postButton: {
-    alignItems: 'center',
+    backgroundColor: '#000',
+    padding: 10,
+    borderRadius: 5,
+  },
+  postButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
   textInput: {
-    borderWidth: 1,
-    borderColor: "#ddd",
     borderRadius: 20,
     padding: 20,
-    marginBottom: 10,
-    backgroundColor: "#f9f9f9",
+    marginBottom: 20,
   },
   image: {
     height: 200,
     width: "100%",
     marginBottom: 10,
+    alignSelf: 'center',
   },
   iconContainer: {
     flexDirection: "row",
-    justifyContent: "space-around",
+    justifyContent: 'space-between',
+   
   },
   iconButton: {
     alignItems: "center",
+    padding: 10,
+  },
+  iconText: {
+    color: '#687076',
+  },
+  imageContainer: {
+    position: 'relative',
+    alignItems: 'center',
+  },
+  cancelButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    borderRadius: 15,
+    padding: 5,
   },
 });
 
