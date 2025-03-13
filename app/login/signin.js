@@ -4,14 +4,14 @@ import {
   TextInput,
   StyleSheet,
   TouchableOpacity,
-  ToastAndroid,
+  Alert,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { useNavigation, useRouter } from "expo-router";
 import { Colors } from "../../constants/Colors.ts";
 import Ionicons from "@expo/vector-icons/Ionicons";
-// import { signInWithEmailAndPassword } from "firebase/auth";
-// import { auth } from "./../../../configs/FireBaseConfig";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../config/firebaseConfig"; // Updated import path
 
 export default function SignIn() {
   const navigation = useNavigation();
@@ -25,41 +25,38 @@ export default function SignIn() {
     });
   }, []);
 
-  // const onSignIn = () => {
-  //   if (!email || !password) {
-  //     ToastAndroid.show("Please enter email & password", ToastAndroid.LONG);
-  //     return;
-  //   }
+  const onSignIn = () => {
+    if (!email || !password) {
+      alert("Please enter email & password");
+      return;
+    }
 
-  //   signInWithEmailAndPassword(auth, email, password)
-  //     .then((userCredential) => {
-  //       // Signed in
-  //       const user = userCredential.user;
-  //       router.replace("/mytrip");
-  //       console.log(user);
-  //       // ...
-  //     })
-  //     .catch((error) => {
-  //       const errorCode = error.code;
-  //       const errorMessage = error.message;
-  //       console.log(errorMessage, error.code);
-  //       if (errorCode == "auth/invalid-email") {
-  //         ToastAndroid.show("Email không hợp lệ", ToastAndroid.LONG);
-  //       } else if (errorCode == "auth/wrong-password") {
-  //         ToastAndroid.show("Mật khẩu không hợp lệ", ToastAndroid.LONG);
-  //       } else if (errorCode == "auth/user-not-found") {
-  //         ToastAndroid.show(
-  //           "Không tìm thấy người dùng. Vui lòng kiểm tra email của bạn.",
-  //           ToastAndroid.LONG
-  //         );
-  //       } else if (errorCode == "auth/invalid-credential") {
-  //         ToastAndroid.show(
-  //           "Thông tin đăng nhập không hợp lệ",
-  //           ToastAndroid.LONG
-  //         );
-  //       }
-  //     });
-  // };
+    signInWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        // Signed in
+        const user = userCredential.user;
+        router.replace("/home");
+        console.log(user);
+        // ...
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.log(errorMessage, error.code);
+        if (errorCode == "auth/invalid-email") {
+          alert("Invalid email");
+        } else if (errorCode == "auth/wrong-password") {
+          alert("Invalid password");
+        } else if (errorCode == "auth/user-not-found") {
+          alert("User not found. Please check your email.");
+        } else if (errorCode == "auth/invalid-credential") {
+          alert("Invalid credentials");
+        } else {
+          alert("Login failed. Please try again.");
+        }
+      });
+  };
+
   return (
     <View
       style={{
@@ -125,7 +122,7 @@ export default function SignIn() {
 
       {/* sign in button */}
       <TouchableOpacity
-        onPress={() => router.replace("/home")}
+        onPress={onSignIn}
         style={{
           padding: 20,
           backgroundColor: Colors.PRIMARY,
@@ -145,7 +142,7 @@ export default function SignIn() {
 
       {/* create acc button */}
       <TouchableOpacity
-        onPress={() => router.replace("/login/singup")}
+        onPress={() => router.replace("/login/signup")}
         style={{
           padding: 20,
           backgroundColor: Colors.WHITE,

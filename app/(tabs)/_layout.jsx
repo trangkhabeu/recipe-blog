@@ -1,12 +1,48 @@
-import { View, Text, TouchableOpacity, Image } from "react-native";
+import { View, Text, TouchableOpacity, Image, Alert } from "react-native";
 import React from "react";
 import { Tabs, useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { Colors } from "./../../constants/Colors";
+import { getAuth, signOut } from "firebase/auth"; // Correct import for auth and signOut
+import { getUserInfo } from "../utils/firebaseUserUtils"; // Correct import path
 
 export default function TabLayout() {
   const router = useRouter();
+  const [userAvatar, setUserAvatar] = React.useState("");
+
+  React.useEffect(() => {
+    // Fetch user info and set avatar
+    const fetchUserInfo = async () => {
+      const auth = getAuth();
+      const userId = auth.currentUser.uid;
+      const userInfo = await getUserInfo(userId);
+      if (userInfo && userInfo.userProfilePic) {
+        setUserAvatar(userInfo.userProfilePic);
+      }
+    };
+    fetchUserInfo();
+
+    const handleUserInfoChange = async () => {
+      await fetchUserInfo();
+    };
+
+    const intervalId = setInterval(handleUserInfoChange, 5000); // Polling every 5 seconds
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const handleSignOut = async () => {
+    const auth = getAuth();
+    try {
+      await signOut(auth);
+      router.replace("/login/signin"); // Navigate to sign-in page after successful sign-out
+      Alert.alert('Sign out successful!');
+    } catch (error) {
+      Alert.alert('Sign out error', error.message);
+    }
+  };
+
   return (
     <Tabs
       screenOptions={{
@@ -35,7 +71,7 @@ export default function TabLayout() {
             >
               <Image
                 source={{
-                  uri: "https://static-cse.canva.com/blob/1806762/1600w-vkBvE1d_xYA.jpg",
+                  uri: userAvatar || "https://static-cse.canva.com/blob/1806762/1600w-vkBvE1d_xYA.jpg",
                 }}
                 style={{
                   width: 40,
@@ -73,7 +109,7 @@ export default function TabLayout() {
             >
               <Image
                 source={{
-                  uri: "https://static-cse.canva.com/blob/1806762/1600w-vkBvE1d_xYA.jpg",
+                  uri: userAvatar || "https://static-cse.canva.com/blob/1806762/1600w-vkBvE1d_xYA.jpg",
                 }}
                 style={{
                   width: 40,
@@ -124,7 +160,7 @@ export default function TabLayout() {
             >
               <Image
                 source={{
-                  uri: "https://static-cse.canva.com/blob/1806762/1600w-vkBvE1d_xYA.jpg",
+                  uri: userAvatar || "https://static-cse.canva.com/blob/1806762/1600w-vkBvE1d_xYA.jpg",
                 }}
                 style={{
                   width: 40,
@@ -166,7 +202,7 @@ export default function TabLayout() {
           },
           headerLeft: () => (
             <TouchableOpacity
-              onPress={() => router.back}
+              onPress={() => router.back()}
               style={{
                 marginRight: 20,
                 backgroundColor: Colors.WHITE,
@@ -179,7 +215,7 @@ export default function TabLayout() {
           ),
           headerRight: () => (
             <TouchableOpacity
-              onPress={() => router.replace("auth/sign-in")}
+              onPress={handleSignOut}
               style={{
                 marginRight: 20,
                 backgroundColor: Colors.WHITE,
