@@ -2,6 +2,8 @@ import { database } from "../config/firebaseConfig";
 import { ref, push, get, child, remove, update } from "firebase/database";
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
+let listeners = [];
+
 export const getPosts = async () => {
   const dbRef = ref(database);
   const snapshot = await get(child(dbRef, "posts"));
@@ -81,6 +83,9 @@ export const addPost = async (post, userId) => {
   // Save post with image URL and userId
   await push(postsRef, { ...post, image: imageUrl, userId });
 
+  // Notify listeners
+  notifyListeners();
+
   // Refresh posts data
   await getPosts();
   await getPostsByUser(userId);
@@ -97,6 +102,9 @@ export const deletePost = async (postId) => {
       await deleteObject(imageRef);
     }
     await remove(dbRef);
+
+    // Notify listeners
+    notifyListeners();
 
     // Refresh posts data
     await getPosts();
@@ -128,11 +136,26 @@ export const updatePost = async (postId, updatedPost) => {
     // Update post with new data
     await update(dbRef, { ...updatedPost, image: imageUrl });
 
+    // Notify listeners
+    notifyListeners();
+
     // Refresh posts data
     await getPosts();
     await getPostsByUser(post.userId);
   } else {
     throw new Error("Post not found");
   }
+};
+
+const notifyListeners = () => {
+  listeners.forEach(listener => listener());
+};
+
+export const addPostsListener = (listener) => {
+  listeners.push(listener);
+};
+
+export const removePostsListener = (listener) => {
+  listeners = listeners.filter(l => l !== listener);
 };
 

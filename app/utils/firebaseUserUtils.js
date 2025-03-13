@@ -22,3 +22,7 @@ export const getUserInfo = (userId) => {
     console.error(error);
   });
 };
+
+export const updateUserProfilePic = (userId, userProfilePic) => {
+  return set(ref(database, 'users/' + userId + '/userProfilePic'), userProfilePic);
+};

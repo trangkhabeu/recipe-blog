@@ -1,7 +1,7 @@
 import { View, Text, TextInput, Button, FlatList, Image, TouchableOpacity, Alert } from "react-native";
 import React, { useState, useEffect } from "react";
 import { Colors } from "../../constants/Colors";
-import { getPosts, addPost } from "../firebase/posts";
+import { getPosts, addPost, addPostsListener, removePostsListener } from "../firebase/posts"; // Import addPostsListener and removePostsListener
 import * as ImagePicker from 'expo-image-picker';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import PostModal from '../../components/PostModal';
@@ -13,12 +13,23 @@ export default function Blog() {
   const [newPost, setNewPost] = useState({ image: "", content: "" });
   const [modalVisible, setModalVisible] = useState(false);
 
+  const fetchPosts = async () => {
+    const fetchedPosts = await getPosts();
+    setPosts(fetchedPosts);
+  };
+
   useEffect(() => {
-    const fetchPosts = async () => {
-      const fetchedPosts = await getPosts();
-      setPosts(fetchedPosts);
-    };
     fetchPosts();
+
+    const handlePostsChange = async () => {
+      await fetchPosts();
+    };
+
+    addPostsListener(handlePostsChange);
+
+    return () => {
+      removePostsListener(handlePostsChange);
+    };
   }, []);
 
   const handleAddPost = async () => {

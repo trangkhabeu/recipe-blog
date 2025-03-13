@@ -1,10 +1,10 @@
-import { View, Text, TouchableOpacity, Image } from "react-native";
+import { View, Text, TouchableOpacity, Image, Alert } from "react-native";
 import React from "react";
 import { Tabs, useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { Colors } from "./../../constants/Colors";
-import { getAuth } from "firebase/auth"; // Correct import for auth
+import { getAuth, signOut } from "firebase/auth"; // Correct import for auth and signOut
 import { getUserInfo } from "../utils/firebaseUserUtils"; // Correct import path
 
 export default function TabLayout() {
@@ -22,7 +22,26 @@ export default function TabLayout() {
       }
     };
     fetchUserInfo();
+
+    const handleUserInfoChange = async () => {
+      await fetchUserInfo();
+    };
+
+    const intervalId = setInterval(handleUserInfoChange, 5000); // Polling every 5 seconds
+
+    return () => clearInterval(intervalId);
   }, []);
+
+  const handleSignOut = async () => {
+    const auth = getAuth();
+    try {
+      await signOut(auth);
+      router.replace("/login/signin"); // Navigate to sign-in page after successful sign-out
+      Alert.alert('Sign out successful!');
+    } catch (error) {
+      Alert.alert('Sign out error', error.message);
+    }
+  };
 
   return (
     <Tabs
@@ -183,7 +202,7 @@ export default function TabLayout() {
           },
           headerLeft: () => (
             <TouchableOpacity
-              onPress={() => router.back}
+              onPress={() => router.back()}
               style={{
                 marginRight: 20,
                 backgroundColor: Colors.WHITE,
@@ -196,7 +215,7 @@ export default function TabLayout() {
           ),
           headerRight: () => (
             <TouchableOpacity
-              onPress={() => router.replace("auth/sign-in")}
+              onPress={handleSignOut}
               style={{
                 marginRight: 20,
                 backgroundColor: Colors.WHITE,

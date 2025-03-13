@@ -3,23 +3,56 @@ import React, { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import className from "twrnc";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { saveRecipeToFavorites, isRecipeFavorited, removeRecipeFromFavorites } from "../firebase/favorites";
+import { getAuth } from "firebase/auth";
+import { useNavigation } from "@react-navigation/native";
 
 const DetailRecipe = () => {
-  const { id } = useLocalSearchParams(); // Lấy id từ params
+  const { id } = useLocalSearchParams();
   const [recipe, setRecipe] = useState(null);
   const router = useRouter();
   const [isFavorite, setIsFavorite] = useState(false);
+  const auth = getAuth();
+  const user = auth.currentUser;
+  const navigation = useNavigation();
+
   useEffect(() => {
     if (id) {
       fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${id}`)
         .then((response) => response.json())
-        .then((data) => setRecipe(data.meals[0]));
+        .then((data) => {
+          setRecipe(data.meals[0]);
+          checkIfFavorite(data.meals[0].idMeal, user.uid);
+        });
     }
   }, [id]);
-  if (!recipe) return <Text>Loadng</Text>;
+
+  const checkIfFavorite = async (recipeId, userId) => {
+    const isFavorited = await isRecipeFavorited(recipeId, userId);
+    setIsFavorite(isFavorited);
+  };
+
+  const handleFavoritePress = () => {
+    if (isFavorite) {
+      removeRecipeFromFavorites(recipe.idMeal, user.uid).then((success) => {
+        if (success) {
+          setIsFavorite(false);
+        }
+      });
+    } else {
+      saveRecipeToFavorites(recipe, user.uid).then((success) => {
+        if (success) {
+          setIsFavorite(true);
+        }
+      });
+    }
+  };
+
+  if (!recipe) return <Text>Loading...</Text>;
+
   return (
     <ScrollView
-      style={{ backgroundColor: "white", flex: 1 }}
+      style={{ backgroundColor: "white", flex: 1 ,paddingTop: 20}}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: 30 }}
     >
@@ -45,7 +78,7 @@ const DetailRecipe = () => {
         </TouchableOpacity>
         <TouchableOpacity
           style={className`p-3 rounded-full bg-gray-200`}
-          onPress={() => setIsFavorite(!isFavorite)}
+          onPress={handleFavoritePress}
         >
           <FontAwesome
             name="heart"
@@ -66,14 +99,8 @@ const DetailRecipe = () => {
       <Text style={{ marginTop: 10, fontFamily: "outfit" }}>
         {recipe.strInstructions}
       </Text>
-      {/* 
-      <Text style={{ fontSize: 24, fontWeight: "bold", marginTop: 10 }}>
-        {recipe.strMeal}
-      </Text>
-      <Text style={{ marginTop: 10 }}>{recipe.strInstructions}</Text> */}
     </ScrollView>
   );
 };
 
 export default DetailRecipe;
-
