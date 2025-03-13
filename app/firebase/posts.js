@@ -147,6 +147,65 @@ export const updatePost = async (postId, updatedPost) => {
   }
 };
 
+export const addLike = async (postId, userId) => {
+  const dbRef = ref(database, `posts/${postId}/likes/${userId}`);
+  await update(dbRef, { liked: true });
+
+  // Notify listeners
+  notifyListeners();
+};
+
+export const removeLike = async (postId, userId) => {
+  const dbRef = ref(database, `posts/${postId}/likes/${userId}`);
+  await remove(dbRef);
+
+  // Notify listeners
+  notifyListeners();
+};
+
+export const addComment = async (postId, userId, comment) => {
+  const commentsRef = ref(database, `posts/${postId}/comments`);
+  await push(commentsRef, { userId, comment, timestamp: Date.now() });
+
+  // Notify listeners
+  notifyListeners();
+};
+
+export const getComments = async (postId) => {
+  const commentsRef = ref(database, `posts/${postId}/comments`);
+  const snapshot = await get(commentsRef);
+  if (snapshot.exists()) {
+    const commentsData = snapshot.val();
+    const userIds = new Set(Object.values(commentsData).map(comment => comment.userId));
+
+    const userPromises = Array.from(userIds).map(async (userId) => {
+      const userSnapshot = await get(child(ref(database), `users/${userId}`));
+      return { userId, ...userSnapshot.val() };
+    });
+
+    const userData = await Promise.all(userPromises);
+    const usersMap = userData.reduce((acc, user) => {
+      acc[user.userId] = user;
+      return acc;
+    }, {});
+
+    const comments = Object.keys(commentsData).map(key => {
+      const comment = commentsData[key];
+      const user = usersMap[comment.userId] || { fullName: "Unknown", userProfilePic: "" };
+      return {
+        id: key,
+        ...comment,
+        userName: user.fullName,
+        userProfilePic: user.userProfilePic,
+      };
+    });
+
+    return comments;
+  } else {
+    return [];
+  }
+};
+
 const notifyListeners = () => {
   listeners.forEach(listener => listener());
 };

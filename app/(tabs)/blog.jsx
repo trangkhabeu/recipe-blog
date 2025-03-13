@@ -1,21 +1,31 @@
 import { View, Text, TextInput, Button, FlatList, Image, TouchableOpacity, Alert } from "react-native";
 import React, { useState, useEffect } from "react";
 import { Colors } from "../../constants/Colors";
-import { getPosts, addPost, addPostsListener, removePostsListener } from "../firebase/posts"; // Import addPostsListener and removePostsListener
+import { getPosts, addPost, addPostsListener, removePostsListener, addLike, removeLike, addComment, getComments } from "../firebase/posts"; // Import getComments
 import * as ImagePicker from 'expo-image-picker';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import PostModal from '../../components/PostModal';
 import BlogPost from '../../components/BlogPost'; 
 import { getAuth } from "firebase/auth"; // Correct import for auth
+import CommentModal from '../../components/CommentModal'; // Import CommentModal component
 
 export default function Blog() {
   const [posts, setPosts] = useState([]);
   const [newPost, setNewPost] = useState({ image: "", content: "" });
   const [modalVisible, setModalVisible] = useState(false);
+  const [commentModalVisible, setCommentModalVisible] = useState(false);
+  const [selectedPostId, setSelectedPostId] = useState(null);
+  const [comment, setComment] = useState("");
+  const [comments, setComments] = useState([]);
 
   const fetchPosts = async () => {
     const fetchedPosts = await getPosts();
     setPosts(fetchedPosts);
+  };
+
+  const fetchComments = async (postId) => {
+    const fetchedComments = await getComments(postId);
+    setComments(fetchedComments);
   };
 
   useEffect(() => {
@@ -85,6 +95,35 @@ export default function Blog() {
     );
   };
 
+  const handleLike = async (postId) => {
+    const auth = getAuth();
+    const userId = auth.currentUser.uid;
+    await addLike(postId, userId);
+    await fetchPosts();
+  };
+
+  const handleUnlike = async (postId) => {
+    const auth = getAuth();
+    const userId = auth.currentUser.uid;
+    await removeLike(postId, userId);
+    await fetchPosts();
+  };
+
+  const handleAddComment = async () => {
+    const auth = getAuth();
+    const userId = auth.currentUser.uid;
+    await addComment(selectedPostId, userId, comment);
+    setComment("");
+    setCommentModalVisible(false);
+    await fetchPosts();
+  };
+
+  const handleComment = (postId) => {
+    setSelectedPostId(postId);
+    fetchComments(postId);
+    setCommentModalVisible(true);
+  };
+
   return (
     <View
       style={{
@@ -101,6 +140,14 @@ export default function Blog() {
         handleAddPost={handleAddPost}
         pickImage={pickImage}
         takePhoto={takePhoto}
+      />
+      <CommentModal
+        modalVisible={commentModalVisible}
+        setModalVisible={setCommentModalVisible}
+        comment={comment}
+        setComment={setComment}
+        handleAddComment={handleAddComment}
+        comments={comments}
       />
       <View
         style={{
@@ -135,7 +182,13 @@ export default function Blog() {
         data={posts}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <BlogPost post={item} setPosts={setPosts} /> // Pass setPosts to BlogPost component
+          <BlogPost
+            post={item}
+            setPosts={setPosts}
+            onLike={() => handleLike(item.id)}
+            onUnlike={() => handleUnlike(item.id)}
+            onComment={() => handleComment(item.id)}
+          />
         )}
       />
     </View>
